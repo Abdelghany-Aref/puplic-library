@@ -1,0 +1,145 @@
+import pyodbc
+conn = pyodbc.connect(
+    "Driver={SQL Server Native Client 11.0};"
+    "Server=ABDELGHANY;"
+    "Database=database1;"
+    "Trusted_Connection=yes;"
+)
+
+def read_from_user(conn, id_=None, name= None): #function reads from a table and returns a ist of lists
+    user_df_list = list()
+    cursor = conn.cursor()
+    if (name is None) and (id_ is None) :
+        cursor.execute('SELECT * FROM [user]')
+    elif (name is not None) and (id_ is None):
+        cursor.execute("SELECT * FROM [user] where name like '{}%'".format(name))
+    elif (name is None) and (id_ is not None):
+        cursor.execute("SELECT * FROM [user] where id  = {}".format(id_))
+    else:
+        cursor.execute("SELECT * FROM [user] where name like '{}%' or id = {}".format(name, id_))
+        
+    for row in cursor:
+        user_df_list.append(list(row))
+
+    return user_df_list
+
+
+def read_from_book(conn, id_=None, name= None):
+    book_df_list = list()
+    cursor = conn.cursor()
+    if (name is None) and (id_ is None):
+        cursor.execute('SELECT * FROM [book]')
+    elif (name is not None) and (id_ is None):
+        cursor.execute("SELECT * FROM [book] where book like '{}%'".format(name))
+    elif (name is None) and (id_ is not None):
+        cursor.execute("SELECT * FROM [book] where id = {}".format(id_))
+    else:
+        cursor.execute("SELECT * FROM [book] where book like '{}%' and id = {}".format(name, id_))
+        
+        
+    for row in cursor:
+        book_df_list.append(list(row))
+    return book_df_list
+
+def read_from_business(conn, id_=None, user_id= None, book_id= None): 
+
+    business_df_list = list()
+    cursor = conn.cursor()
+    if (id_ is None) and (user_id is None) and (book_id is None):
+        cursor.execute("select * from business")
+    elif id_ is not None:
+        cursor.execute("select * from business where id = {}".format(id_))
+    elif user_id is not None:
+        cursor.execute("select * from business where user_id = {}".format(user_id))
+    elif book_id is not None:
+        cursor.execute('select * from business where book_id = {}'.format(book_id))
+        
+        
+    for row in cursor:
+        business_df_list.append(list(row))
+    return business_df_list
+
+def insert_into_user(conn, name, age, num_book_borrowed, address, national_number):
+    cursor = conn.cursor()
+    cursor.execute(
+        "insert into [user](name, age, num_book_borrowed, address, national_number) values(?, ?, ?, ?, ?);",
+        (name, age, num_book_borrowed, address, national_number))
+    
+
+def insert_into_book(conn, book_name, author, puplish_date, edetion, amount):
+    cursor = conn.cursor()
+    cursor.execute(
+        "insert into [book](book, author, puplish_date, edetion, amount) values(?, ?, ?, ?, ?);",
+        (book_name, author, puplish_date, edetion, amount))
+
+def insert_into_bussiness(conn, user_id, book_id, day_of_borrow, day_of_retrival):
+    list_ = read_from_book(conn, book_id)
+    amount= list_[0][5]
+    if amount > 0: #checking the book amount is available for beeing borrowed
+        update_book(conn, book_id, amount_= amount-1) #decrementing the amount of that book
+        
+        num_book_borrowed = read_from_user(conn, user_id)[0][3] # get num of books that this user have borrowed
+        
+        update_user(conn, user_id, num_book_borrowed_= num_book_borrowed+1)
+        cursor = conn.cursor()
+        cursor.execute(
+            "insert into [business](user_id, book_id, day_of_borrow, day_of_retrival) values(?, ?, ?, ?);",
+            (user_id, book_id, day_of_borrow, day_of_retrival))
+    else:
+        return -1
+    
+
+def update_user(conn, id_, name_=None, age_=None, num_book_borrowed_= None, address_=None, national_number_= None):
+    list_ = read_from_user(conn, id_=id_) #search with id to only get one record    
+    name, age, num_book_borrowed, address, national_num= list_[0][1:]
+    
+    #checking all the not None vlues to do only one update
+    if name_ is not None: name= name_
+    if age_ is not None: age= age_
+    if num_book_borrowed_ is not None: num_book_borrowed= num_book_borrowed_
+    if address_ is not None: address= address_
+    if national_number_ is not None: national_number =national_number_
+    
+    
+    cursor = conn.cursor()
+    cursor.execute(
+    "update [user] set name='{}', age={}, num_book_borrowed={}, address='{}', "\
+        "national_number='{}' where id={}".format(name, age, num_book_borrowed, address, national_num, id_)
+    )
+
+    
+
+def update_book(conn, id_, book_=None, author_=None, puplish_date_=None, edetion_=None, amount_=None):
+    list_ = read_from_book(conn, id_=id_)
+    book, author, puplish_date, edetion, amount = list_[0][1:]
+    
+    #checking all the not None vlues to do only one update
+    if book_ is not None: book = book_
+    if author_ is not None: author = author_
+    if puplish_date_ is not None: puplish_date = puplish_date_
+    if edetion_ is not None: edetion = edetion_
+    if amount_ is not None: amount = amount_
+        
+    cursor = conn.cursor()
+    cursor.execute(
+    "update [book] set book='{}', author='{}', puplish_date='{}', edetion='{}', amount= '{}'"\
+        " where id = {}".format(book, author, puplish_date, edetion, amount, id_)
+    )
+    
+
+def update_business(conn, id_, user_id_= None, book_id_= None, day_of_borrow_= None, day_of_retrival_= None):
+    list_ = read_from_business(conn, id_)
+    user_id, book_id, day_of_borrow, day_of_retrival = list_[0][1:]
+    
+    #checking all the not None vlues to do only one update
+    if user_id_ is not None: user_id = user_id_
+    if book_id_ is not None: book_id = book_id_
+    if day_of_borrow_ is not None: day_of_borrow = day_of_borrow_
+    if day_of_retrival_ is not None: day_of_retrival = day_of_retrival_
+        
+    cursor = conn.cursor()
+    cursor.execute(
+    "update [business] set user_id={}, book_id='{}', day_of_borrow='{}', day_of_retrival='{}'"\
+        " where id = {}".format(user_id, book_id, day_of_borrow, day_of_retrival, id_)
+    )
+    
