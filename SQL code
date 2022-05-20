@@ -1,0 +1,92 @@
+USE [master]
+GO
+
+create database database1
+go
+
+USE [library]
+GO
+
+/****** Object:  Table [dbo].[book]    Script Date: 5/18/2022 9:42:37 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[book](
+	[id] [int] IDENTITY(1000,1) NOT NULL,
+	[Book] [nvarchar](50) NOT NULL,
+	[author] [nvarchar](50) NULL,
+	[puplish_date] [nvarchar](50) NULL,
+	[edetion] [nvarchar](50) NULL,
+	[amount] [int] NULL,
+ CONSTRAINT [PK_book] PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+USE [library]
+GO
+
+/****** Object:  Table [dbo].[user]    Script Date: 5/18/2022 9:43:54 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[user](
+	[id] [int] IDENTITY(1000,1) NOT NULL,
+	[name] [nvarchar](50) NOT NULL,
+	[age] [int] NULL,
+	[num_book_borrowed] [int] NULL,
+	[address] [nvarchar](50) NULL,
+	[national_number] [nvarchar](50) NULL,
+ CONSTRAINT [PK_user] PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+USE [library]
+GO
+
+/****** Object:  Table [dbo].[business]    Script Date: 5/18/2022 9:44:03 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[business](
+	[id] [int] IDENTITY(1000,1) NOT NULL,
+	[user_id] [int] NULL,
+	[book_id] [int] NULL,
+	[day_of_borrow] [nvarchar](50) NULL,
+	[day_of_retrival] [nvarchar](50) NULL,
+ CONSTRAINT [PK_business] PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[business]  WITH CHECK ADD  CONSTRAINT [FK_business_bookId_book_id] FOREIGN KEY([book_id])
+REFERENCES [dbo].[book] ([id])
+GO
+
+ALTER TABLE [dbo].[business] CHECK CONSTRAINT [FK_business_bookId_book_id]
+GO
+
+ALTER TABLE [dbo].[business]  WITH CHECK ADD  CONSTRAINT [FK_bussiness_userId_user_id] FOREIGN KEY([user_id])
+REFERENCES [dbo].[user] ([id])
+GO
+
+ALTER TABLE [dbo].[business] CHECK CONSTRAINT [FK_bussiness_userId_user_id]
+GO
+
+
